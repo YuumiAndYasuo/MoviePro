@@ -1,0 +1,2 @@
+include ':app', ':ijkplayer-java', ':ijkplayer-exo', ':ijkplayer-example'
+rootProject.name='mytest123'

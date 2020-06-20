@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.App.ActionButton" parent="@style/Widget.AppCompat.ActionButton">
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <style name="Theme.App.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="actionButtonStyle">@style/Widget.App.ActionButton</item>
+    </style>
+
+    <style name="Theme.App.NoActionBar" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">@null</item>
+
+        <item name="actionButtonStyle">@style/Widget.App.ActionButton</item>
+    </style>
+
+
+<!--    <style name="MediaButton">-->
+<!--        <item name="background">@null</item>-->
+<!--        <item name="layout_width">71dip</item>-->
+<!--        <item name="layout_height">52dip</item>-->
+<!--    </style>-->
+
+<!--    <style name="MediaButton.Previous">-->
+<!--        <item name="src">@drawable/ic_media_previous</item>-->
+<!--        <item name="contentDescription">@string/lockscreen_transport_prev_description</item>-->
+<!--    </style>-->
+
+<!--    <style name="MediaButton.Next">-->
+<!--        <item name="src">@drawable/ic_media_next</item>-->
+<!--        <item name="contentDescription">@string/lockscreen_transport_next_description</item>-->
+<!--    </style>-->
+
+<!--    <style name="MediaButton.Play">-->
+<!--        <item name="src">@drawable/ic_media_play</item>-->
+<!--        <item name="contentDescription">@string/lockscreen_transport_play_description</item>-->
+<!--    </style>-->
+
+<!--    <style name="MediaButton.Ffwd">-->
+<!--        <item name="src">@drawable/ic_media_ff</item>-->
+<!--        <item name="contentDescription">@string/lockscreen_transport_ffw_description</item>-->
+<!--    </style>-->
+
+<!--    <style name="MediaButton.Rew">-->
+<!--        <item name="src">@drawable/ic_media_rew</item>-->
+<!--        <item name="contentDescription">@string/lockscreen_transport_rew_description</item>-->
+<!--    </style>-->
+
+<!--    <style name="MediaButton.Pause">-->
+<!--        <item name="android:src">@mipmap/pause</item>-->
+<!--        <item name="contentDescription">@string/lockscreen_transport_pause_description</item>-->
+<!--    </style>-->
+</resources>
