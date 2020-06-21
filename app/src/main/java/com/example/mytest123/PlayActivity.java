@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.View;
 import android.view.Window;
@@ -20,6 +21,8 @@ import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.MediaController;
+import android.widget.ProgressBar;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,8 +56,9 @@ public class PlayActivity extends Activity {
     private MyMediaController myMediaController;    //视频控制器
     private TableLayout mHudView;                   //视频详细信息
     private SurfaceRenderView mSurfaceRenderView;   //控制视频大小、旋转、好像是这样
+    private ProgressBar mloadVideoProgressbar;       //加载视频时显示该控件
 
-
+    //视频详细信息控件
     private ImageView coverimg;
     private TextView videotype;
     private TextView videoname;
@@ -65,13 +69,18 @@ public class PlayActivity extends Activity {
     private TextView videointroduce;
     private TextView playnum;
 
+    //事件
+    OrientationEventListener mOrientationEventListener;     //监听屏幕旋转角度
+
     //控制变量
-    private boolean screen_vertical=true;                //当前是竖屏还是横屏
-    private GestureDetector gestureDetector;        //手势监听      监听步骤①
-    private myGestureDetector myGestureDetector;    //具体的手势监听
-    private int currentPosition=0;                  //当前播放位置
-    private int screenHeight=0;                     //当前屏幕高度和宽度，使用前需初始化
+    private GestureDetector gestureDetector;                //手势监听      监听步骤①
+    private myGestureDetector myGestureDetector;            //具体的手势监听
+    private int currentPosition=0;                          //当前播放位置
+    private int screenHeight=0;                             //当前屏幕高度和宽度，使用前需初始化
     private int screenWidth=0;
+//    private boolean backpressed=false;                      //点击返回键
+    private boolean enablerotation=true;                    //允许旋转
+    private boolean currentOriention_LANDSCAPE =false;      //当前是竖屏还是横屏
 
     //视频播放比例宏定义
     private static final int SIZE_DEFAULT = 0;
@@ -197,18 +206,39 @@ public class PlayActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        currentPosition=mVideoView.getCurrentPosition();
-        mVideoView.pause();
+//        if(backpressed&& !currentOriention_LANDSCAPE){
+//            mVideoView.stopBackgroundPlay();
+//            mVideoView.stopPlayback();
+//            this.finish();
+//        }else {//暂停播放 保存播放进度
+            currentPosition=mVideoView.getCurrentPosition();
+            mVideoView.pause();
+//        }
+//        backpressed=false;
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        myMediaController.show();
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {                //监听步骤③
         return gestureDetector.onTouchEvent(event);
+    }
+
+    @Override
+    public void onBackPressed() {
+//        backpressed=true;
+        if(!currentOriention_LANDSCAPE){
+//            Toast.makeText(PlayActivity.this,"退出本activity#######",Toast.LENGTH_SHORT).show();
+            this.finish();
+        }else{
+//            Toast.makeText(PlayActivity.this,"退出全屏@@@@@@@@",Toast.LENGTH_SHORT).show();
+            convertToPortScreen();
+        }
     }
 
     //初始化
@@ -220,10 +250,14 @@ public class PlayActivity extends Activity {
 
     //获取所有的全局控件
     private void findView(){
+        //播放器部分
         mVideoView=findViewById(R.id.ijk_video_View);
         mHudView=findViewById(R.id.hud_view);
         myMediaController=new MyMediaController(this);
-//        mSurfaceRenderView=new SurfaceRenderView(this);
+        mloadVideoProgressbar=findViewById(R.id.loadVideoProgress);
+
+        //其它文字信息
+
     }
 
     //设置播放器
@@ -235,19 +269,40 @@ public class PlayActivity extends Activity {
 
     //添加监听事件
     private void setListener(){
+        //监听视频准备完成事件
         mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(IMediaPlayer mp) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        setScreenRate(currentSize);
                         Toast.makeText(PlayActivity.this,"加载完成",Toast.LENGTH_SHORT).show();
                     }
                 });
+                //加载成功，进度条不可见
+                mloadVideoProgressbar.setVisibility(View.INVISIBLE);
                 mp.start();
             }
         });
+
+        //添加屏幕旋转监听
+        mOrientationEventListener=new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                if(enablerotation){
+                    if((orientation>150&&orientation<210)||(orientation>330||orientation<30)){//竖屏 自适应
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+                    }else if((orientation>240&&orientation<300)||(orientation>60&&orientation<120)){//横屏 自适应
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                    }
+                }
+            }
+
+        };
+        if(enablerotation) {
+            mOrientationEventListener.enable();     //启用该监听
+        }
+
 
         //开始监听手势
         myGestureDetector=new myGestureDetector();                      //监听步骤②
@@ -308,19 +363,46 @@ public class PlayActivity extends Activity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         //重新获取屏幕的宽和高
+        Toast.makeText(this,"屏幕旋转！！！",Toast.LENGTH_SHORT).show();
         initScreenInfo();
         if(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE){//切换为横屏
-            LinearLayout.LayoutParams layoutParams=(LinearLayout.LayoutParams)mVideoView.getLayoutParams();
-            layoutParams.height=screenHeight;
-            layoutParams.width=screenWidth;
-            mVideoView.setLayoutParams(layoutParams);
+            convertToLandScreen();
+//            currentOriention_LANDSCAPE =true;
         }else {
-            LinearLayout.LayoutParams layoutParams=(LinearLayout.LayoutParams)mVideoView.getLayoutParams();
-            layoutParams.height=screenWidth*9/16;
-            layoutParams.width=screenWidth;
-            mVideoView.setLayoutParams(layoutParams);
+            convertToPortScreen();
+//            currentOriention_LANDSCAPE =false;
         }
-        setScreenRate(currentSize);
+        //设置纵横比
+//        setScreenRate(currentSize);
+    }
+
+    //正常播放
+    private void convertToPortScreen() {
+        currentOriention_LANDSCAPE =false;
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);//设置videoView竖屏播放
+        initScreenInfo();
+        int height=screenHeight;
+        int width=screenWidth;
+        FrameLayout relativeLayout=findViewById(R.id.media_box);
+        mHudView.setVisibility(View.VISIBLE);
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(width,width*9/16);
+        relativeLayout.setLayoutParams(params);
+
+    }
+
+    //全屏播放
+    private void convertToLandScreen() {
+        currentOriention_LANDSCAPE =true;
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//设置videoView横屏播放
+        initScreenInfo();
+        int height=screenHeight;
+        int width=screenWidth;
+        FrameLayout relativeLayout=findViewById(R.id.media_box);
+        mHudView.setVisibility(View.INVISIBLE);
+        LinearLayout.LayoutParams layoutParams=new LinearLayout.LayoutParams(width,height);
+        relativeLayout.setLayoutParams(layoutParams);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
     /**
@@ -348,15 +430,16 @@ public class PlayActivity extends Activity {
         public void onLongPress(MotionEvent e) {
 
 //            getScreenOrientation();
-            if(screen_vertical){//切换到全屏播放
-                Toast.makeText(getApplicationContext(),"切换到全屏播放"+screen_vertical,Toast.LENGTH_SHORT).show();
+            if(!currentOriention_LANDSCAPE){//切换到全屏播放
+//                currentOriention_LANDSCAPE =true;
+                Toast.makeText(getApplicationContext(),"切换到全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
                 convertToLandScreen();
-                screen_vertical=false;
+
 
             }else {//退出全屏播放
-                Toast.makeText(getApplicationContext(),"退出全屏播放"+screen_vertical,Toast.LENGTH_SHORT).show();
+//                currentOriention_LANDSCAPE =false;
+                Toast.makeText(getApplicationContext(),"退出全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
                 convertToPortScreen();
-                screen_vertical=true;
             }
         }
 
@@ -561,29 +644,29 @@ public class PlayActivity extends Activity {
             return (int) (dpValue * scale + 0.5f);
         }
 
-        //正常播放
-        private void convertToPortScreen() {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            int height=getScreenHeight();
-            int width=getScreenWidth();
-            LinearLayout relativeLayout=findViewById(R.id.media_box);
-            mHudView.setVisibility(View.VISIBLE);
-            LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(height,width*2/5);
-
-            relativeLayout.setLayoutParams(params);
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);//设置videoView竖屏播放
-        }
-
-        //全屏播放
-        private void convertToLandScreen() {
-            int height=getScreenHeight();
-            int width=getScreenWidth();
-            LinearLayout relativeLayout=findViewById(R.id.media_box);
-            mHudView.setVisibility(View.INVISIBLE);
-            LinearLayout.LayoutParams layoutParams=new LinearLayout.LayoutParams(height,width);
-            relativeLayout.setLayoutParams(layoutParams);
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//设置videoView横屏播放
-        }
+//        //正常播放
+//        private void convertToPortScreen() {
+//            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//            int height=getScreenHeight();
+//            int width=getScreenWidth();
+//            FrameLayout relativeLayout=findViewById(R.id.media_box);
+//            mHudView.setVisibility(View.VISIBLE);
+//            FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(height,width*2/5);
+//
+//            relativeLayout.setLayoutParams(params);
+//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);//设置videoView竖屏播放
+//        }
+//
+//        //全屏播放
+//        private void convertToLandScreen() {
+//            int height=getScreenHeight();
+//            int width=getScreenWidth();
+//            FrameLayout relativeLayout=findViewById(R.id.media_box);
+//            mHudView.setVisibility(View.INVISIBLE);
+//            FrameLayout.LayoutParams layoutParams=new FrameLayout.LayoutParams(height,width);
+//            relativeLayout.setLayoutParams(layoutParams);
+//            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//设置videoView横屏播放
+//        }
     }
 }

@@ -9,7 +9,7 @@ tools:context=".PlayActivity">
 
 
 <!--播放-->
-<LinearLayout
+<FrameLayout
     android:id="@+id/media_box"
     android:layout_width="match_parent"
     android:layout_height="200dp">
@@ -17,7 +17,13 @@ tools:context=".PlayActivity">
         android:id="@+id/ijk_video_View"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-</LinearLayout>
+    <ProgressBar
+        android:id="@+id/loadVideoProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        style="?android:attr/progressBarStyle"/>
+</FrameLayout>
 
 
 
