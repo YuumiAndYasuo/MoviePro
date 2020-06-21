@@ -61,7 +61,7 @@ tools:context=".PlayActivity">
 
 
 
-<!--垂直滚动视图-->
+<!--垂直滚动视图 视频详情-->
 <ScrollView
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">

@@ -17,7 +17,9 @@ package tv.danmaku.ijk.media.example.widget.media;
  */
 
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
@@ -37,6 +39,7 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -111,6 +114,7 @@ public class MyMediaController extends FrameLayout{
     private ImageButton mRewButton;
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
+    private ImageButton mFullScreenButton;
     private CharSequence mPlayDescription;
     private CharSequence mPauseDescription;
     private AccessibilityManager mAccessibilityManager;
@@ -326,31 +330,36 @@ public class MyMediaController extends FrameLayout{
             mPauseButton.setOnClickListener(mPauseListener);
         }
 
-        mFfwdButton = (ImageButton)v.findViewById(R.id.ffwd);
-        if (mFfwdButton != null) {
-            mFfwdButton.setOnClickListener(mFfwdListener);
-            if (!mFromXml) {
-                mFfwdButton.setVisibility(mUseFastForward ? View.VISIBLE : View.GONE);
-            }
-        }
+        mFullScreenButton=(ImageButton)findViewById(R.id.fullscreen);
+//        if(mFullScreenButton!=null){
+//            mFullScreenButton.setOnClickListener(mFullScreenListener);
+//        }
 
-        mRewButton = (ImageButton)v.findViewById(R.id.rew);
-        if (mRewButton != null) {
-            mRewButton.setOnClickListener(mRewListener);
-            if (!mFromXml) {
-                mRewButton.setVisibility(mUseFastForward ? View.VISIBLE : View.GONE);
-            }
-        }
+//        mFfwdButton = (ImageButton)v.findViewById(R.id.ffwd);
+//        if (mFfwdButton != null) {
+//            mFfwdButton.setOnClickListener(mFfwdListener);
+//            if (!mFromXml) {
+//                mFfwdButton.setVisibility(mUseFastForward ? View.VISIBLE : View.GONE);
+//            }
+//        }
+
+//        mRewButton = (ImageButton)v.findViewById(R.id.rew);
+//        if (mRewButton != null) {
+//            mRewButton.setOnClickListener(mRewListener);
+//            if (!mFromXml) {
+//                mRewButton.setVisibility(mUseFastForward ? View.VISIBLE : View.GONE);
+//            }
+//        }
 
         // By default these are hidden. They will be enabled when setPrevNextListeners() is called
-        mNextButton = (ImageButton)v.findViewById(R.id.next);
-        if (mNextButton != null && !mFromXml && !mListenersSet) {
-            mNextButton.setVisibility(View.GONE);
-        }
-        mPrevButton = (ImageButton)v.findViewById(R.id.prev);
-        if (mPrevButton != null && !mFromXml && !mListenersSet) {
-            mPrevButton.setVisibility(View.GONE);
-        }
+//        mNextButton = (ImageButton)v.findViewById(R.id.next);
+//        if (mNextButton != null && !mFromXml && !mListenersSet) {
+//            mNextButton.setVisibility(View.GONE);
+//        }
+//        mPrevButton = (ImageButton)v.findViewById(R.id.prev);
+//        if (mPrevButton != null && !mFromXml && !mListenersSet) {
+//            mPrevButton.setVisibility(View.GONE);
+//        }
 
         mProgress = (ProgressBar) v.findViewById(R.id.mediacontroller_progress);
         if (mProgress != null) {
@@ -445,6 +454,7 @@ public class MyMediaController extends FrameLayout{
     }
 
     /**
+     * 将控制器隐藏
      * Remove the controller from the screen.
      */
     public void hide() {
@@ -598,6 +608,10 @@ public class MyMediaController extends FrameLayout{
         }
     };
 
+
+    /**
+     * 更新播放与暂停的按钮图片
+     */
     private void updatePausePlay() {
         if (mRoot == null || mPauseButton == null)
             return;
@@ -611,6 +625,9 @@ public class MyMediaController extends FrameLayout{
         }
     }
 
+    /**
+     * 暂停与播放控制
+     */
     private void doPauseResume() {
         if (mPlayer.isPlaying()) {
             mPlayer.pause();
@@ -757,6 +774,13 @@ public class MyMediaController extends FrameLayout{
         }
     }
 
+    //全屏事件，外部传入
+    public void setFullScreenListener(View.OnClickListener onClickListener){
+//        mFullScreenListener=onClickListener;
+        mFullScreenButton=findViewById(R.id.fullscreen);
+        mFullScreenButton.setOnClickListener(onClickListener);
+    }
+
 
     private ArrayList<View> mShowOnceArray = new ArrayList<View>();
     public void showOnce(@NonNull View view) {
@@ -764,6 +788,7 @@ public class MyMediaController extends FrameLayout{
         view.setVisibility(View.VISIBLE);
         show();
     }
+
 
     public interface MediaPlayerControl {
         void    start();

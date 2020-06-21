@@ -234,6 +234,7 @@ public class PlayActivity extends Activity {
 //        backpressed=true;
         if(!currentOriention_LANDSCAPE){
 //            Toast.makeText(PlayActivity.this,"退出本activity#######",Toast.LENGTH_SHORT).show();
+            mVideoView.stopPlayback();
             this.finish();
         }else{
 //            Toast.makeText(PlayActivity.this,"退出全屏@@@@@@@@",Toast.LENGTH_SHORT).show();
@@ -281,7 +282,21 @@ public class PlayActivity extends Activity {
                 });
                 //加载成功，进度条不可见
                 mloadVideoProgressbar.setVisibility(View.INVISIBLE);
+                //开始播放视频
                 mp.start();
+                //监听全屏按钮
+                myMediaController.setFullScreenListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(!currentOriention_LANDSCAPE){//切换到全屏播放
+                            Toast.makeText(getApplicationContext(),"切换到全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
+                            convertToLandScreen();
+                        }else {//退出全屏播放
+                            Toast.makeText(getApplicationContext(),"退出全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
+                            convertToPortScreen();
+                        }
+                    }
+                });
             }
         });
 
@@ -297,11 +312,12 @@ public class PlayActivity extends Activity {
                     }
                 }
             }
-
         };
         if(enablerotation) {
             mOrientationEventListener.enable();     //启用该监听
         }
+
+
 
 
         //开始监听手势
@@ -404,6 +420,7 @@ public class PlayActivity extends Activity {
         relativeLayout.setLayoutParams(layoutParams);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
+
 
     /**
      * 内部类 播放器的控制

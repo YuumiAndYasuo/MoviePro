@@ -18,26 +18,33 @@
     </style>
 
 
-<!--    <style name="MediaButton">-->
-<!--        <item name="background">@null</item>-->
-<!--        <item name="layout_width">71dip</item>-->
-<!--        <item name="layout_height">52dip</item>-->
-<!--    </style>-->
+    <style name="MediaButton">
+        <item name="background">@null</item>
+        <item name="android:layout_width">71dip</item>
+        <item name="android:layout_height">52dip</item>
+    </style>
 
 <!--    <style name="MediaButton.Previous">-->
-<!--        <item name="src">@drawable/ic_media_previous</item>-->
-<!--        <item name="contentDescription">@string/lockscreen_transport_prev_description</item>-->
+<!--        <item name="android:src">@mipmap/play</item>-->
+<!--        <item name="contentDescription">播放/暂停</item>-->
 <!--    </style>-->
 
 <!--    <style name="MediaButton.Next">-->
-<!--        <item name="src">@drawable/ic_media_next</item>-->
+<!--        <item name="android:src">@drawable/ic_media_next</item>-->
 <!--        <item name="contentDescription">@string/lockscreen_transport_next_description</item>-->
 <!--    </style>-->
 
-<!--    <style name="MediaButton.Play">-->
-<!--        <item name="src">@drawable/ic_media_play</item>-->
-<!--        <item name="contentDescription">@string/lockscreen_transport_play_description</item>-->
-<!--    </style>-->
+    <style name="MediaButton.Play">
+        <item name="background">@null</item>
+        <item name="android:src">@mipmap/play</item>
+        <item name="contentDescription">播放</item>
+    </style>
+
+    <style name="MediaButton.Pause">
+        <item name="background">@null</item>
+        <item name="android:src">@mipmap/pause</item>
+        <item name="contentDescription">暂停</item>
+    </style>
 
 <!--    <style name="MediaButton.Ffwd">-->
 <!--        <item name="src">@drawable/ic_media_ff</item>-->
