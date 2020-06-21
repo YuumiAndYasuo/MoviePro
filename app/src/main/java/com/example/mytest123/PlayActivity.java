@@ -17,12 +17,13 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.MediaController;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,7 +57,8 @@ public class PlayActivity extends Activity {
     private MyMediaController myMediaController;    //视频控制器
     private TableLayout mHudView;                   //视频详细信息
     private SurfaceRenderView mSurfaceRenderView;   //控制视频大小、旋转、好像是这样
-    private ProgressBar mloadVideoProgressbar;       //加载视频时显示该控件
+    private ProgressBar mLoadVideoProgressbar;       //加载视频时显示该控件
+    private Switch mRotationSwitch;                 //控制是否允许自动旋转
 
     //视频详细信息控件
     private ImageView coverimg;
@@ -78,8 +80,8 @@ public class PlayActivity extends Activity {
     private int currentPosition=0;                          //当前播放位置
     private int screenHeight=0;                             //当前屏幕高度和宽度，使用前需初始化
     private int screenWidth=0;
-//    private boolean backpressed=false;                      //点击返回键
-    private boolean enablerotation=true;                    //允许旋转
+//    private boolean backpressed=false;                    //点击返回键
+    private boolean enablerotation=true;                    //默认允许旋转
     private boolean currentOriention_LANDSCAPE =false;      //当前是竖屏还是横屏
 
     //视频播放比例宏定义
@@ -255,7 +257,9 @@ public class PlayActivity extends Activity {
         mVideoView=findViewById(R.id.ijk_video_View);
         mHudView=findViewById(R.id.hud_view);
         myMediaController=new MyMediaController(this);
-        mloadVideoProgressbar=findViewById(R.id.loadVideoProgress);
+        mLoadVideoProgressbar =findViewById(R.id.loadVideoProgress);
+
+
 
         //其它文字信息
 
@@ -270,35 +274,6 @@ public class PlayActivity extends Activity {
 
     //添加监听事件
     private void setListener(){
-        //监听视频准备完成事件
-        mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(IMediaPlayer mp) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(PlayActivity.this,"加载完成",Toast.LENGTH_SHORT).show();
-                    }
-                });
-                //加载成功，进度条不可见
-                mloadVideoProgressbar.setVisibility(View.INVISIBLE);
-                //开始播放视频
-                mp.start();
-                //监听全屏按钮
-                myMediaController.setFullScreenListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(!currentOriention_LANDSCAPE){//切换到全屏播放
-                            Toast.makeText(getApplicationContext(),"切换到全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
-                            convertToLandScreen();
-                        }else {//退出全屏播放
-                            Toast.makeText(getApplicationContext(),"退出全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
-                            convertToPortScreen();
-                        }
-                    }
-                });
-            }
-        });
 
         //添加屏幕旋转监听
         mOrientationEventListener=new OrientationEventListener(this) {
@@ -317,6 +292,52 @@ public class PlayActivity extends Activity {
             mOrientationEventListener.enable();     //启用该监听
         }
 
+
+        //监听视频准备完成事件
+        mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(IMediaPlayer mp) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(PlayActivity.this,"加载完成",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                //加载成功，进度条不可见
+                mLoadVideoProgressbar.setVisibility(View.INVISIBLE);
+                //开始播放视频
+                mp.start();
+
+
+                //以下的监听需要视频加载出来才可以使用，故放在setOnPreparedListener中
+                //监听全屏按钮
+                myMediaController.setFullScreenListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(!currentOriention_LANDSCAPE){//切换到全屏播放
+                            Toast.makeText(getApplicationContext(),"切换到全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
+                            convertToLandScreen();
+                        }else {//退出全屏播放
+                            Toast.makeText(getApplicationContext(),"退出全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
+                            convertToPortScreen();
+                        }
+                    }
+                });
+
+                //监听自动旋转
+                myMediaController.setRotationSwitchListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if(isChecked){
+                            mOrientationEventListener.enable();     //启用该监听
+                        }else {
+                            mOrientationEventListener.disable();    //禁用
+                        }
+                    }
+                });
+
+            }
+        });
 
 
 

@@ -37,6 +37,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -44,6 +45,7 @@ import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.Switch;
 import android.widget.TextView;
 
 
@@ -115,6 +117,7 @@ public class MyMediaController extends FrameLayout{
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
     private ImageButton mFullScreenButton;
+    private Switch mRotationSwitch;
     private CharSequence mPlayDescription;
     private CharSequence mPauseDescription;
     private AccessibilityManager mAccessibilityManager;
@@ -331,6 +334,8 @@ public class MyMediaController extends FrameLayout{
         }
 
         mFullScreenButton=(ImageButton)findViewById(R.id.fullscreen);
+
+        mRotationSwitch=(Switch)findViewById(R.id.rotationSwitch);
 //        if(mFullScreenButton!=null){
 //            mFullScreenButton.setOnClickListener(mFullScreenListener);
 //        }
@@ -779,6 +784,12 @@ public class MyMediaController extends FrameLayout{
 //        mFullScreenListener=onClickListener;
         mFullScreenButton=findViewById(R.id.fullscreen);
         mFullScreenButton.setOnClickListener(onClickListener);
+    }
+
+    public void setRotationSwitchListener(CompoundButton.OnCheckedChangeListener rotationSwitchListener){
+//        mFullScreenListener=onClickListener;
+        mRotationSwitch=findViewById(R.id.rotationSwitch);
+        mRotationSwitch.setOnCheckedChangeListener(rotationSwitchListener);
     }
 
 
