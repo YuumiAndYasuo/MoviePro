@@ -5,6 +5,15 @@ public class VideoInfo {
     private String videotype;
     private String videourl;
 
+    public VideoInfo() {
+    }
+
+    public VideoInfo(String videoname, String videotype, String videourl) {
+        this.videoname = videoname;
+        this.videotype = videotype;
+        this.videourl = videourl;
+    }
+
     public String getVideoname() {
         return videoname;
     }

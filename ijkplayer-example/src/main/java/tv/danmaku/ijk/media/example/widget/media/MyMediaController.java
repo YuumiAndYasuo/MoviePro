@@ -158,10 +158,10 @@ public class MyMediaController extends FrameLayout {
         mActionBar = actionBar;
         if(actionBar!=null){
             if (isShowing()) {
-                Toast.makeText(mContext,"显示",Toast.LENGTH_SHORT).show();
+//                Toast.makeText(mContext,"显示",Toast.LENGTH_SHORT).show();
                 actionBar.show();
             } else {
-                Toast.makeText(mContext,"隐藏",Toast.LENGTH_SHORT).show();
+//                Toast.makeText(mContext,"隐藏",Toast.LENGTH_SHORT).show();
                 actionBar.hide();
             }
         }

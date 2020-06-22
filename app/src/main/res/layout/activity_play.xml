@@ -25,7 +25,7 @@ tools:context=".PlayActivity">
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="30dp"
-            android:background="#66000000"
+            android:background="#55000000"
             android:minHeight="?attr/actionBarSize">
 
             <RelativeLayout
@@ -72,18 +72,46 @@ tools:context=".PlayActivity">
 
     <!--当前正在播放集数-->
     <LinearLayout
+        android:id="@+id/playinginfo"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:orientation="horizontal"
         android:layout_marginLeft="10dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="正在播放："/>
-        <TextView
-            android:id="@+id/playnum"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <!--正在播放-->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="正在播放："/>
+            <TextView
+                android:id="@+id/playnum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!--切换播放源-->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="切换mp4"/>
+
+            <Switch
+                android:id="@+id/playsourceSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"/>
+        </LinearLayout>
+
+
     </LinearLayout>
 
     <!--选集-->
@@ -114,6 +142,7 @@ tools:context=".PlayActivity">
 
             <!--视频详情-->
             <LinearLayout
+                android:id="@+id/videodetaillayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"

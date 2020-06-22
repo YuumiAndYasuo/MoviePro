@@ -11,7 +11,6 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.media.AudioManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -46,8 +45,6 @@ import java.util.ArrayList;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
-import tv.danmaku.ijk.media.example.application.Settings;
-import tv.danmaku.ijk.media.example.widget.media.AndroidMediaController;
 import tv.danmaku.ijk.media.example.widget.media.IjkVideoView;
 import tv.danmaku.ijk.media.example.widget.media.MyMediaController;
 import tv.danmaku.ijk.media.example.widget.media.SurfaceRenderView;
@@ -68,6 +65,7 @@ public class PlayActivity extends AppCompatActivity {
     private TextView mToolbarTitle;                 //视频标题
 
     //视频详细信息控件
+    private Switch mPlaySourceSwitch;
     private ImageView coverimg;
     private TextView videotype;
     private TextView videoname;
@@ -88,8 +86,10 @@ public class PlayActivity extends AppCompatActivity {
     private int screenHeight=0;                             //当前屏幕高度和宽度，使用前需初始化
     private int screenWidth=0;
     //    private boolean backpressed=false;                    //点击返回键
-    private boolean enablerotation=true;                    //默认允许旋转
+    private boolean enablerotation=false;                    //默认不允许旋转
     private boolean currentOriention_LANDSCAPE =false;      //当前是竖屏还是横屏
+    private boolean enablem3u8=false;                        //默认播放mp4  false播放mp4
+    private boolean switchPlaysourceStatus =true;              //是否首次加载切换播放源
 
     //视频播放比例宏定义
     private static final int SIZE_DEFAULT = 0;
@@ -97,123 +97,48 @@ public class PlayActivity extends AppCompatActivity {
     private static final int SIZE_16_9 = 2;
     private int currentSize = SIZE_16_9;
 
+    //数据变量
+    VideoDetail videoDetail;                                //存放视频的播放链接以及其它详细信息
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
 
+        //初始化
         init();
+
+        //获取控件
         findView();
 
-
+        //获取上个页面传递过来的视频详细链接
         Intent intent=getIntent();
-        final String videoDetailUrl=intent.getStringExtra("url");
+        String type=intent.getStringExtra("type");
+        String url=intent.getStringExtra("url");
 
-        HttpUtil.get(videoDetailUrl, new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(PlayActivity.this,"加载视频失败，请刷新重试",Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
+        if(type.equals("live")){//播放直播
+            mVideoView.setVideoPath(url);
+            mVideoView.setMediaController(myMediaController);
+            mVideoView.setHudView(mHudView);
+            mVideoView.start();
+            mPlaySourceSwitch.setVisibility(View.INVISIBLE);
+            findViewById(R.id.gridlayout).setVisibility(View.INVISIBLE);
+            findViewById(R.id.videodetaillayout).setVisibility(View.INVISIBLE);
+            findViewById(R.id.playinginfo).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.rotationSwitch).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.autorotation_tips).setVisibility(View.INVISIBLE);
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                final String html=response.body().string();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //获取视频详细信息
-                        final VideoDetail videoDetail= ParseHtml.parsedetailinfo(html);
-                        //获取各个控件
-                        coverimg=(ImageView)findViewById(R.id.videocover);
-                        videotype=findViewById(R.id.videotype);
-                        videoname=findViewById(R.id.videoname);
-                        videoactors=findViewById(R.id.videoactors);
-                        videodirector=findViewById(R.id.videodirector);
-                        videoarea=findViewById(R.id.videoarea);
-                        videolanguage=findViewById(R.id.videolanguage);
-                        videointroduce=findViewById(R.id.videointroduce);
-                        playnum=findViewById(R.id.playnum);
+            setListener();
 
-                        //设置播放列表
-                        final GridLayout gridLayout=(GridLayout)findViewById(R.id.gridlayout);
-                        GridLayout.LayoutParams params = null;
-                        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
-//                        final ArrayList<PlayLink> tmp=videoDetail.getPlaylists_mp4();
-                        final ArrayList<PlayLink> tmp=videoDetail.getPlaylists_m3u8();
-                        int length=tmp.size();
-                        int i,j,k=0;
-                        for(i=0;i<length/4+1;i++){
-                            for(j=0;j<4;j++){
-                                if(k>=length){
-                                    break;
-                                }
-                                final Button button=new Button(PlayActivity.this);
-                                button.setText(tmp.get(k).getVideonum());
-                                button.setWidth((screenWidth-60)/4);
-                                if(k==0){
-                                    button.setBackgroundColor(Color.parseColor("#fb7299"));
-                                }
-//                                button.
-                                //设置行
-                                GridLayout.Spec rowSpec=GridLayout.spec(i);
-                                //设置列
-                                GridLayout.Spec columnSpec=GridLayout.spec(j);
-                                params=new GridLayout.LayoutParams(rowSpec,columnSpec);
-                                params.setMargins(5, 5, 5, 5);
-                                final int index=k;
-
-                                button.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        mVideoView.setVideoPath(tmp.get(index).getVideourl());
-                                        for (int i = 0; i < gridLayout.getChildCount(); i++) {//清空所有背景色
-                                            Button b = (Button) gridLayout.getChildAt(i);
-                                            b.setBackgroundColor(Color.parseColor("#d6d7d7"));
-                                        }
-                                        //设置选中的按钮背景色
-                                        button.setBackgroundColor(Color.parseColor("#fb7299"));
-                                        playnum.setText(tmp.get(index).getVideonum());
-                                        Toast.makeText(PlayActivity.this,"正在加载"+tmp.get(index).getVideonum(),Toast.LENGTH_SHORT).show();
-
-                                    }
-                                });
-                                gridLayout.addView(button,params);
-                                k++;
-                            }
-                        }
-                        //设置各控件内容
-                        Glide.with(PlayActivity.this).load(videoDetail.getCoverimage()).into(coverimg);
-//                        mVideoView.setVideoPath(videoDetail.getPlaylists_mp4().get(0).getVideourl());
-                        mVideoView.setVideoPath(videoDetail.getPlaylists_m3u8().get(0).getVideourl());
-                        mToolbarTitle.setText(videoDetail.getVideoname()+" "+videoDetail.getPlaylists_m3u8().get(0).getVideonum());
-                        videotype.setText(videoDetail.getVideotype());
-                        videoname.setText(videoDetail.getVideoname());
-                        videodirector.setText(videoDetail.getDirector());
-                        videoactors.setText(videoDetail.getActors());
-                        videoarea.setText(videoDetail.getArea());
-                        videolanguage.setText(videoDetail.getLanguage());
-                        videointroduce.setText("\u3000\u3000" +videoDetail.getIntroduce());
-                        playnum.setText(videoDetail.getPlaylists_m3u8().get(0).getVideonum());
-
-
-//                        mVideoView.setMediaController(myMediaController);
-                        Toast.makeText(PlayActivity.this,"正在加载，请稍后",Toast.LENGTH_LONG).show();
-//                        videoView.seekTo(300);
-                    }
-                });
-
-
-            }
-        });
-
-        setmVideoView();
-        setListener();
+        }else if(type.equals("video")){
+            //获取视频并进行相关处理
+            getVideodata(url);
+            //设置播放器
+            setmVideoView();
+            //设置监听
+            setListener();
+        }
     }
 
     @Override
@@ -281,7 +206,58 @@ public class PlayActivity extends AppCompatActivity {
         myMediaController.setSupportActionBar(mActionBar);
 
         //其它文字信息
+        //获取各个控件
+        mPlaySourceSwitch=findViewById(R.id.playsourceSwitch);
+        coverimg=(ImageView)findViewById(R.id.videocover);
+        videotype=findViewById(R.id.videotype);
+        videoname=findViewById(R.id.videoname);
+        videoactors=findViewById(R.id.videoactors);
+        videodirector=findViewById(R.id.videodirector);
+        videoarea=findViewById(R.id.videoarea);
+        videolanguage=findViewById(R.id.videolanguage);
+        videointroduce=findViewById(R.id.videointroduce);
+        playnum=findViewById(R.id.playnum);
 
+    }
+
+    //请求视频播放链接等数据、并进行相关设置
+    private void getVideodata(String videoDetailUrl){
+        HttpUtil.get(videoDetailUrl, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(PlayActivity.this,"加载视频失败，请刷新重试",Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                //获得网页返回的数据
+                final String html=response.body().string();
+
+                /**
+                 * 开一个线程进行界面的设置，否则报错
+                 * android.view.ViewRootImpl$CalledFromWrongThreadException:
+                 * Only the original thread that created a view hierarchy can touch its views.
+                 */
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    //获取视频详细信息
+                    videoDetail= ParseHtml.parsedetailinfo(html);
+                    //设置播放列表（选集列表）
+                    setPlayList(videoDetail);
+                    //设置详细信息
+                    setDetailInfo(videoDetail);
+                    //提示信息
+                    Toast.makeText(PlayActivity.this,"正在加载，请稍后",Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
     }
 
     //设置播放器
@@ -366,10 +342,111 @@ public class PlayActivity extends AppCompatActivity {
             }
         });
 
-
+        //监听切换播放源开关
+        mPlaySourceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //切换为mp4
+                enablem3u8= !isChecked;
+                switchPlaylist();
+                //显示加载进度条
+                mLoadVideoProgressbar.setVisibility(View.VISIBLE);
+            }
+        });
         //开始监听手势
         myGestureDetector=new myGestureDetector();                      //监听步骤②
         gestureDetector=new GestureDetector(getApplicationContext(),myGestureDetector);
+    }
+
+    //设置视频的选集列表
+    private void setPlayList(VideoDetail videoDetail){
+        final GridLayout gridLayout=(GridLayout)findViewById(R.id.gridlayout);
+        GridLayout.LayoutParams params = null;
+        //移除该布局上的所有控件
+        gridLayout.removeAllViews();
+        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+
+        final ArrayList<PlayLink> tmp;
+        if(enablem3u8){
+            tmp=videoDetail.getPlaylists_m3u8();
+        }else {
+            tmp=videoDetail.getPlaylists_mp4();
+        }
+//      final ArrayList<PlayLink> tmp=videoDetail.getPlaylists_mp4();
+
+        int length=tmp.size();
+        int i,j,k=0;
+        for(i=0;i<length/4+1;i++){
+            for(j=0;j<4;j++){
+                if(k>=length){
+                    break;
+                }
+                final Button button=new Button(PlayActivity.this);
+                button.setText(tmp.get(k).getVideonum());
+                button.setWidth((screenWidth-60)/4);
+                if(k==0){
+                    button.setBackgroundColor(Color.parseColor("#fb7299"));
+                }
+                //设置行
+                GridLayout.Spec rowSpec=GridLayout.spec(i);
+                //设置列
+                GridLayout.Spec columnSpec=GridLayout.spec(j);
+                params=new GridLayout.LayoutParams(rowSpec,columnSpec);
+                params.setMargins(5, 5, 5, 5);
+                final int index=k;
+
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mVideoView.setVideoPath(tmp.get(index).getVideourl());
+                        for (int i = 0; i < gridLayout.getChildCount(); i++) {//清空所有背景色
+                            Button b = (Button) gridLayout.getChildAt(i);
+                            b.setBackgroundColor(Color.parseColor("#d6d7d7"));
+                        }
+                        //设置选中的按钮背景色
+                        button.setBackgroundColor(Color.parseColor("#fb7299"));
+                        playnum.setText(tmp.get(index).getVideonum());
+                        Toast.makeText(PlayActivity.this,"正在加载"+tmp.get(index).getVideonum(),Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+                gridLayout.addView(button,params);
+                k++;
+            }
+        }
+    }
+
+    //设置视频的详细信息，并添加播放链接
+    private void setDetailInfo(VideoDetail videoDetail){
+        Glide.with(PlayActivity.this).load(videoDetail.getCoverimage()).into(coverimg);
+
+        if(enablem3u8){
+            mVideoView.setVideoPath(videoDetail.getPlaylists_m3u8().get(0).getVideourl());
+            mToolbarTitle.setText(videoDetail.getVideoname()+" "+videoDetail.getPlaylists_m3u8().get(0).getVideonum());
+            playnum.setText(videoDetail.getPlaylists_m3u8().get(0).getVideonum());
+        }else {
+            mVideoView.setVideoPath(videoDetail.getPlaylists_mp4().get(0).getVideourl());
+            mToolbarTitle.setText(videoDetail.getVideoname()+" "+videoDetail.getPlaylists_mp4().get(0).getVideonum());
+            playnum.setText(videoDetail.getPlaylists_mp4().get(0).getVideonum());
+        }
+
+        //首次执行时加载
+        if(switchPlaysourceStatus){
+            videotype.setText(videoDetail.getVideotype());
+            videoname.setText(videoDetail.getVideoname());
+            videodirector.setText(videoDetail.getDirector());
+            videoactors.setText(videoDetail.getActors());
+            videoarea.setText(videoDetail.getArea());
+            videolanguage.setText(videoDetail.getLanguage());
+            videointroduce.setText("\u3000\u3000" +videoDetail.getIntroduce());
+        }
+    }
+
+    //设置视频的选集列表和详细信息，并添加播放链接
+    private void switchPlaylist(){
+        setPlayList(videoDetail);
+        setDetailInfo(videoDetail);
+        switchPlaysourceStatus =false;
     }
 
     //获取屏幕的宽高
@@ -426,7 +503,7 @@ public class PlayActivity extends AppCompatActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         //重新获取屏幕的宽和高
-        Toast.makeText(this,"屏幕旋转！！！",Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this,"屏幕旋转！！！",Toast.LENGTH_SHORT).show();
         initScreenInfo();
         if(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE){//切换为横屏
             convertToLandScreen();
@@ -470,7 +547,7 @@ public class PlayActivity extends AppCompatActivity {
 
 
     /**
-     * 内部类 播放器的控制
+     * 内部类 播放器的手势控制
      * 双击控制         播放/暂停
      * 长按控制         全屏/正常
      * 左划右划         快退/快进
@@ -496,13 +573,13 @@ public class PlayActivity extends AppCompatActivity {
 //            getScreenOrientation();
             if(!currentOriention_LANDSCAPE){//切换到全屏播放
 //                currentOriention_LANDSCAPE =true;
-                Toast.makeText(getApplicationContext(),"切换到全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(),"切换到全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
                 convertToLandScreen();
 
 
             }else {//退出全屏播放
 //                currentOriention_LANDSCAPE =false;
-                Toast.makeText(getApplicationContext(),"退出全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(),"退出全屏播放"+ currentOriention_LANDSCAPE,Toast.LENGTH_SHORT).show();
                 convertToPortScreen();
             }
         }
@@ -604,10 +681,10 @@ public class PlayActivity extends AppCompatActivity {
         public boolean onDoubleTap(MotionEvent e) {
 //            Toast.makeText(BaseApplication.getContext(),"双击",Toast.LENGTH_SHORT).show();
             if(mVideoView.isPlaying()){
-                Toast.makeText(getApplicationContext(),"暂停播放",Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(),"暂停播放",Toast.LENGTH_SHORT).show();
                 mVideoView.pause();
             }else {
-                Toast.makeText(getApplicationContext(),"继续播放",Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(),"继续播放",Toast.LENGTH_SHORT).show();
                 mVideoView.start();
             }
             return super.onDoubleTap(e);
@@ -653,7 +730,7 @@ public class PlayActivity extends AppCompatActivity {
             int width = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
             int height = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getHeight();
 
-            Toast.makeText(getApplicationContext(),rotation+":"+width+":"+height,Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(),rotation+":"+width+":"+height,Toast.LENGTH_SHORT).show();
 
             int orientation;
             // if the device's natural orientation is portrait:
